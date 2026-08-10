@@ -8,6 +8,7 @@ export default function BadgeBuilder() {
   const [stack, setStack] = useState('Cloud & Gen AI');
   const [title, setTitle] = useState('Platform Architect');
   const [image, setImage] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -18,17 +19,13 @@ export default function BadgeBuilder() {
     try {
       let processedFile: Blob | File = file;
       
-      // If the file is from an iPhone (HEIC), convert it to JPEG instantly in the browser
       if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
-        // DYNAMIC IMPORT: This prevents the 'window is not defined' Next.js SSR error
         const heic2any = (await import('heic2any')).default;
-        
         const convertedBlob = await heic2any({
           blob: file,
           toType: 'image/jpeg',
           quality: 0.8
         });
-        // heic2any can return an array of blobs if it's a burst photo, we just want the first one
         processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
       }
 
@@ -39,18 +36,26 @@ export default function BadgeBuilder() {
       console.error("Error processing image:", error);
       alert("There was an issue processing that image. Please try a standard JPG or PNG.");
     } finally {
-      // This resets the input so you can upload the exact same file again if you need to while testing
       e.target.value = '';
     }
   };
 
   const generateBadge = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (isGenerating) return;
+    setIsGenerating(true);
 
-    // 1. High-Res Canvas Dimensions (2x scale of the 420px HTML layout)
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      setIsGenerating(false);
+      return;
+    }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      setIsGenerating(false);
+      return;
+    }
+
+    // 1. High-Res Canvas Dimensions (2x scale)
     const width = 840;
     const height = 1160;
     canvas.width = width;
@@ -72,7 +77,7 @@ export default function BadgeBuilder() {
     ctx.strokeStyle = cDarkGreen;
     ctx.strokeRect(8, 8, width - 16, height - 16);
 
-    // Helper: Draw Text
+    // Helpers
     const drawText = (text: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign = 'center') => {
       ctx.font = font;
       ctx.fillStyle = color;
@@ -80,7 +85,6 @@ export default function BadgeBuilder() {
       ctx.fillText(text, x, y);
     };
 
-    // Helper: Rounded Rectangle (for pills)
     const drawPill = (x: number, y: number, w: number, h: number, fill: string, stroke: string) => {
       const r = h / 2;
       ctx.beginPath();
@@ -101,11 +105,9 @@ export default function BadgeBuilder() {
     drawText('MADGAON', width / 2, 140, '900 80px serif', cDarkGreen);
     drawText('COAST', width / 2, 200, '900 48px serif', cOrange);
     
-    // Date Pill
     drawPill(width / 2 - 190, 230, 380, 50, cTeal, cDarkGreen);
     drawText('HH GOA 2026 • OCT 28-31', width / 2, 262, '900 20px sans-serif', '#FFFFFF');
 
-    // Tropical Accents (Emojis)
     ctx.beginPath();
     ctx.arc(100, 100, 40, 0, Math.PI * 2);
     ctx.fillStyle = '#E0F2FE';
@@ -126,32 +128,30 @@ export default function BadgeBuilder() {
     ctx.strokeStyle = cOrange;
     ctx.stroke();
 
-    // Name Text
     drawText(name.toUpperCase(), width / 2, 755, '900 48px sans-serif', '#FFFFFF');
 
-    // Title Pill (Overlapping)
     const titleWidth = 440;
     drawPill(width / 2 - (titleWidth / 2), 775, titleWidth, 60, cYellow, cDarkGreen);
     drawText(`🌊 ${title.toUpperCase()} 🌊`, width / 2, 815, '900 24px sans-serif', cDarkGreen);
 
-    // 6. Draw Grid Dividers (Dashed)
+    // 6. Draw Grid Dividers
     ctx.beginPath();
     ctx.setLineDash([10, 10]);
     ctx.lineWidth = 6;
     ctx.strokeStyle = 'rgba(6, 78, 59, 0.3)';
-    ctx.moveTo(0, 880); ctx.lineTo(width, 880); // Horizontal
-    ctx.moveTo(width / 2, 880); ctx.lineTo(width / 2, 1080); // Vertical
+    ctx.moveTo(0, 880); ctx.lineTo(width, 880); 
+    ctx.moveTo(width / 2, 880); ctx.lineTo(width / 2, 1080); 
     ctx.stroke();
-    ctx.setLineDash([]); // Reset dash
+    ctx.setLineDash([]); 
 
-    // 7. Left Column (Builder Details)
+    // 7. Left Column
     drawText('✦ BUILDER CLASS ✦', width / 4, 930, '900 20px sans-serif', cOrange);
     drawText(stack.toUpperCase(), width / 4, 970, '900 28px sans-serif', cDarkGreen);
     
     drawText('✦ CURRENT VIBE ✦', width / 4, 1030, '900 20px sans-serif', cTeal);
     drawText('FULL SUSHEGAD', width / 4, 1070, '900 24px sans-serif', cDarkGreen);
 
-    // 8. Right Column (Tropical Tote)
+    // 8. Right Column
     drawText('✦ TROPICAL TOTE ✦', (width / 4) * 3, 930, '900 20px sans-serif', cOrange);
     drawText('🥥 Tender Coconut', (width / 4) * 3, 975, 'bold 24px sans-serif', cDarkGreen);
     drawText('🥘 Goan Ros Omelette', (width / 4) * 3, 1025, 'bold 24px sans-serif', cDarkGreen);
@@ -167,11 +167,10 @@ export default function BadgeBuilder() {
     ctx.stroke();
     drawText('#FRAMEINGOA', width / 2, 1140, '900 28px sans-serif', '#FFFFFF');
 
-    // 10. Circular Profile Photo (Drawn last to layer correctly)
+    // 10. Circular Profile Photo
     const imgCenterY = 480;
-    const imgRadius = 180; // 360px wide
+    const imgRadius = 180; 
     
-    // Outer dashed ring
     ctx.beginPath();
     ctx.arc(width / 2, imgCenterY, 210, 0, Math.PI * 2);
     ctx.setLineDash([20, 15]);
@@ -187,7 +186,6 @@ export default function BadgeBuilder() {
       
       await new Promise<void>((resolve) => {
         img.onload = () => {
-          // Crop and Draw the user's photo as a perfect circle
           ctx.save();
           ctx.beginPath();
           ctx.arc(width / 2, imgCenterY, imgRadius, 0, Math.PI * 2);
@@ -203,7 +201,6 @@ export default function BadgeBuilder() {
           ctx.drawImage(img, dx, dy, scaledW, scaledH);
           ctx.restore();
 
-          // Draw the inner solid border
           ctx.beginPath();
           ctx.arc(width / 2, imgCenterY, imgRadius, 0, Math.PI * 2);
           ctx.lineWidth = 10;
@@ -214,7 +211,6 @@ export default function BadgeBuilder() {
         };
       });
     } else {
-      // Placeholder if no image is uploaded
       ctx.beginPath();
       ctx.arc(width / 2, imgCenterY, imgRadius, 0, Math.PI * 2);
       ctx.fillStyle = '#FFFBEB';
@@ -225,12 +221,46 @@ export default function BadgeBuilder() {
       drawText('🥥', width / 2, imgCenterY, '80px sans-serif', '#000');
     }
 
-    // 11. Trigger Download
+    // 11. Trigger Download Instantly
     const dataUrl = canvas.toDataURL('image/png');
     const link = document.createElement('a');
     link.download = `HH_GOA_26_${name.replace(/\s+/g, '_')}.png`;
     link.href = dataUrl;
     link.click();
+
+    // 12. Upload to Vercel Blob & Trigger Twitter Share
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        setIsGenerating(false);
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('file', blob, `badge.png`);
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        const data = await res.json();
+        
+        if (data.url) {
+          const baseUrl = window.location.origin;
+          const sharePageUrl = `${baseUrl}/share?img=${encodeURIComponent(data.url)}`;
+          
+          const tweetText = encodeURIComponent("Just secured my Tropical Pass for Hacker House Goa 2026! 🌴 Drop your tech stack in the replies or quote tweet with yours! #FrameInGoa");
+          const twitterIntentUrl = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(sharePageUrl)}`;
+          
+          window.open(twitterIntentUrl, '_blank');
+        }
+      } catch (error) {
+        console.error("Failed to upload for sharing:", error);
+      } finally {
+        setIsGenerating(false);
+      }
+    }, 'image/png');
   };
 
   return (
@@ -282,9 +312,10 @@ export default function BadgeBuilder() {
 
           <button 
             onClick={generateBadge}
-            className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-black py-4 rounded-lg uppercase tracking-widest transition-all active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_#064E3B] border-2 border-[#064E3B]"
+            disabled={isGenerating}
+            className={`w-full ${isGenerating ? 'bg-[#EA580C] opacity-70 cursor-wait' : 'bg-[#F97316] hover:bg-[#EA580C]'} text-white font-black py-4 rounded-lg uppercase tracking-widest transition-all active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_#064E3B] border-2 border-[#064E3B]`}
           >
-            Generate Pass
+            {isGenerating ? 'Processing...' : 'Generate Pass & Share'}
           </button>
         </div>
 
