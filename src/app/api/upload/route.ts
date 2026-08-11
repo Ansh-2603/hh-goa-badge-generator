@@ -10,9 +10,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Let Vercel automatically handle the credentials (OIDC or Token) in production!
+    // Explicitly mapping to the exact variable name Vercel generated for you
     const blob = await put(`hh-goa-${Date.now()}.png`, file, {
       access: 'public',
+      token: process.env.Public_READ_WRITE_TOKEN,
     });
 
     return NextResponse.json({ url: blob.url });
