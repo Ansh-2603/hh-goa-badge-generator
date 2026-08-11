@@ -10,13 +10,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Upload to Vercel Blob storage, explicitly passing the token to bypass OIDC
+    // Let Vercel automatically handle the credentials (OIDC or Token) in production!
     const blob = await put(`hh-goa-${Date.now()}.png`, file, {
       access: 'public',
-      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
-    // Return the public URL of the uploaded image
     return NextResponse.json({ url: blob.url });
   } catch (error) {
     console.error("Upload error:", error);
