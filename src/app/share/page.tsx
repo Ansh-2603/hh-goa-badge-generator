@@ -1,12 +1,13 @@
 import { Metadata } from 'next';
 
-// Using 'any' safely bypasses the Next.js 14 vs 15 version type conflicts
+// This line is the magic fix! It forces Next.js to process the URL parameters dynamically on every request.
+export const dynamic = 'force-dynamic';
+
 type Props = {
   searchParams: any;
 };
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  // 'await' works perfectly here whether searchParams is a Promise or a plain object
   const params = await searchParams;
   const imageUrl = params?.img || '';
 
