@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Upload, Ticket } from 'lucide-react';
+import { Upload, Image as ImageIcon } from 'lucide-react';
 
 export default function BadgeBuilder() {
-  const [name, setName] = useState('Ansh Mangesh Narkar');
-  const [stack, setStack] = useState('Cloud & Gen AI');
-  const [title, setTitle] = useState('Platform Architect');
+  const [name, setName] = useState('Ansh Mangesh');
+  const [stack, setStack] = useState('Terminal Wizard');
+  const [title, setTitle] = useState('Founder');
+  const [shipping, setShipping] = useState('Building the Future');
   const [image, setImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -15,23 +16,14 @@ export default function BadgeBuilder() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     try {
       let processedFile: Blob | File = file;
-      
       if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
         const heic2any = (await import('heic2any')).default;
-        const convertedBlob = await heic2any({
-          blob: file,
-          toType: 'image/jpeg',
-          quality: 0.8
-        });
+        const convertedBlob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
         processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
       }
-
-      const imageUrl = URL.createObjectURL(processedFile);
-      setImage(imageUrl);
-      
+      setImage(URL.createObjectURL(processedFile));
     } catch (error) {
       console.error("Error processing image:", error);
       alert("There was an issue processing that image. Please try a standard JPG or PNG.");
@@ -45,37 +37,29 @@ export default function BadgeBuilder() {
     setIsGenerating(true);
 
     const canvas = canvasRef.current;
-    if (!canvas) {
-      setIsGenerating(false);
-      return;
-    }
+    if (!canvas) { setIsGenerating(false); return; }
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      setIsGenerating(false);
-      return;
-    }
+    if (!ctx) { setIsGenerating(false); return; }
 
-    // 1. High-Res Canvas Dimensions
-    const width = 840;
-    const height = 1160;
+    // 1. Poster Dimensions (1080x1350 is a great 4:5 social media ratio)
+    const width = 1080;
+    const height = 1350;
     canvas.width = width;
     canvas.height = height;
 
-    // Official HH Goa Colors
-    const cDarkGreen = '#0F4C3A';
-    const cMagenta = '#E11D48'; // Rose-600
-    const cYellow = '#FACC15';  // Yellow-400
-    const cCream = '#FDFBF7';
-    const cOutline = '#0A3222';
+    // Palette inspired by the reference
+    const cCream = '#F9F6E8';
+    const cDarkGreen = '#063A24';
+    const cPink = '#E83262';
+    const cYellow = '#F6C338';
+    const cOrange = '#E87A24';
 
-    // 2. Base Card Background
+    // 2. Base Background & Border
     ctx.fillStyle = cCream;
     ctx.fillRect(0, 0, width, height);
-
-    // 3. Card Outer Border
-    ctx.lineWidth = 16;
+    ctx.lineWidth = 20;
     ctx.strokeStyle = cDarkGreen;
-    ctx.strokeRect(8, 8, width - 16, height - 16);
+    ctx.strokeRect(10, 10, width - 20, height - 20);
 
     // Helpers
     const drawText = (text: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign = 'center') => {
@@ -85,108 +69,132 @@ export default function BadgeBuilder() {
       ctx.fillText(text, x, y);
     };
 
-    const drawPill = (x: number, y: number, w: number, h: number, fill: string, stroke: string) => {
-      const r = h / 2;
+    const drawRotatedText = (text: string, x: number, y: number, font: string, color: string, angle: number) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle * Math.PI / 180);
+      drawText(text, 0, 0, font, color, 'center');
+      ctx.restore();
+    };
+
+    const drawPill = (x: number, y: number, w: number, h: number, fill: string, stroke: string, lw = 4, radius = h/2) => {
       ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + w - radius, y);
+      ctx.arcTo(x + w, y, x + w, y + radius, radius);
+      ctx.lineTo(x + w, y + h - radius);
+      ctx.arcTo(x + w, y + h, x + w - radius, y + h, radius);
+      ctx.lineTo(x + radius, y + h);
+      ctx.arcTo(x, y + h, x, y + h - radius, radius);
+      ctx.lineTo(x, y + radius);
+      ctx.arcTo(x, y, x + radius, y, radius);
       ctx.closePath();
       ctx.fillStyle = fill;
       ctx.fill();
-      ctx.lineWidth = 5;
+      ctx.lineWidth = lw;
       ctx.strokeStyle = stroke;
       ctx.stroke();
     };
 
-    // 4. Top Header - Official Theme
-    drawText('HACKER HOUSE', width / 2, 150, '900 75px serif', cDarkGreen);
+    // --- TOP SECTION ---
     
-    // HH Goa 2026 Tag
-    drawPill(width / 2 - 130, 180, 260, 50, cMagenta, cOutline);
-    drawText('HH GOA 2026', width / 2, 215, '900 24px sans-serif', '#FFFFFF');
-
-    // Accent Graphics (Stamps)
-    ctx.beginPath();
-    ctx.arc(120, 150, 50, 0, Math.PI * 2);
-    ctx.fillStyle = cYellow;
-    ctx.fill();
+    // Top Left Stamp
+    ctx.save();
+    ctx.translate(140, 100);
+    ctx.rotate(-10 * Math.PI / 180);
+    ctx.fillStyle = '#FFF';
+    ctx.fillRect(-80, -60, 160, 120);
     ctx.lineWidth = 4;
-    ctx.strokeStyle = cOutline;
+    ctx.strokeStyle = cDarkGreen;
+    ctx.strokeRect(-80, -60, 160, 120);
+    ctx.setLineDash([5, 5]);
+    ctx.strokeRect(-70, -50, 140, 100);
+    ctx.setLineDash([]);
+    drawText('GOA', -25, -20, '900 24px sans-serif', cPink);
+    drawText('INDIA', -25, 0, 'bold 16px sans-serif', cDarkGreen);
+    drawText('🌴', 30, -5, '40px sans-serif', '#000');
+    drawText('🌅', 0, 35, '40px sans-serif', '#000');
+    ctx.restore();
+
+    // Top Right Stamp (Circular)
+    ctx.beginPath();
+    ctx.arc(920, 100, 70, 0, Math.PI * 2);
+    ctx.strokeStyle = cDarkGreen;
+    ctx.lineWidth = 3;
     ctx.stroke();
-    drawText('🌴', 120, 165, '45px sans-serif', '#000');
+    ctx.beginPath();
+    ctx.arc(920, 100, 60, 0, Math.PI * 2);
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawText('🌴', 920, 115, '50px sans-serif', '#000');
     
-    // 5. Name Banner Background
-    ctx.fillStyle = cDarkGreen;
-    ctx.fillRect(0, 680, width, 120);
-    ctx.beginPath();
-    ctx.moveTo(0, 680); ctx.lineTo(width, 680);
-    ctx.moveTo(0, 800); ctx.lineTo(width, 800);
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = cYellow;
-    ctx.stroke();
+    // Center Pink Tag
+    drawPill(450, 0, 180, 140, cPink, cYellow, 6, 20);
+    drawText('HH', 540, 50, '900 32px sans-serif', cYellow);
+    drawText('GOA', 540, 90, '900 36px sans-serif', cYellow);
+    drawText('2026', 540, 120, '900 24px sans-serif', '#FFF');
 
-    drawText(name.toUpperCase(), width / 2, 755, '900 48px sans-serif', '#FFFFFF');
+    // --- MAIN TITLE ---
+    drawText('HACKER', 280, 240, '900 80px serif', cDarkGreen);
+    drawText('HOUSE', 800, 240, '900 80px serif', cDarkGreen);
+    // Hindi Overlay
+    ctx.save();
+    ctx.shadowColor = '#FFF';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
+    drawText('गोवा', 540, 240, '900 90px sans-serif', cPink);
+    ctx.restore();
 
-    // Title Pill
-    const titleWidth = 440;
-    drawPill(width / 2 - (titleWidth / 2), 775, titleWidth, 60, cYellow, cOutline);
-    drawText(`✦ ${title.toUpperCase()} ✦`, width / 2, 815, '900 22px sans-serif', cDarkGreen);
+    // Some birds in the sky
+    drawText('~', 200, 300, 'bold 30px sans-serif', cDarkGreen);
+    drawText('~', 250, 280, 'bold 20px sans-serif', cDarkGreen);
+    drawText('~', 850, 320, 'bold 30px sans-serif', cDarkGreen);
 
-    // 6. Draw Grid Dividers
-    ctx.beginPath();
-    ctx.setLineDash([12, 12]);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = 'rgba(15, 76, 58, 0.4)';
-    ctx.moveTo(0, 880); ctx.lineTo(width, 880); 
-    ctx.moveTo(width / 2, 880); ctx.lineTo(width / 2, 1080); 
-    ctx.stroke();
-    ctx.setLineDash([]); 
+    // --- SIDE GRAPHICS (Simulated) ---
+    // Left Vertical Text
+    drawRotatedText('✦ 28 - 31 OCT 2026 ✦', 70, 550, 'bold 24px sans-serif', cPink, -90);
+    // Right Vertical Text
+    drawRotatedText('✦ GOA, INDIA ✦', 1010, 550, 'bold 24px sans-serif', cPink, 90);
 
-    // 7. Left Column
-    drawText('✦ BUILDER CLASS ✦', width / 4, 930, '900 20px sans-serif', cMagenta);
-    drawText(stack.toUpperCase(), width / 4, 970, '900 28px sans-serif', cDarkGreen);
+    // Left Directional Signs
+    const signX = 180;
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(signX - 10, 400, 20, 250); // Pole
+    drawPill(signX - 80, 420, 160, 40, cYellow, cDarkGreen, 3, 5);
+    drawText('BUILD', signX, 448, '900 20px sans-serif', cDarkGreen);
+    drawPill(signX - 70, 480, 140, 40, cPink, cDarkGreen, 3, 5);
+    drawText('SHIP', signX, 508, '900 20px sans-serif', '#FFF');
+    drawPill(signX - 80, 540, 160, 40, cDarkGreen, '#FFF', 3, 5);
+    drawText('REPEAT', signX, 568, '900 20px sans-serif', '#FFF');
+    drawText('🏄‍♂️', signX - 40, 640, '60px sans-serif', '#000');
+
+    // Right Let's Build Sticker
+    drawRotatedText('LET\'S', 870, 450, '900 36px sans-serif', cDarkGreen, -15);
+    drawRotatedText('BUILD!', 880, 490, '900 36px sans-serif', cDarkGreen, -15);
+    // Right Side Emojis
+    drawText('🏡', 880, 600, '120px sans-serif', '#000');
+    drawText('🛵', 830, 660, '70px sans-serif', '#000');
+
+    // --- PROFILE PHOTO ---
+    const imgCenterY = 540;
+    const imgRadius = 240; 
     
-    drawText('✦ CURRENT VIBE ✦', width / 4, 1030, '900 20px sans-serif', cMagenta);
-    drawText('BUILD. SHIP. REPEAT.', width / 4, 1070, '900 24px sans-serif', cDarkGreen);
-
-    // 8. Right Column
-    drawText('✦ BEACH BAG ✦', (width / 4) * 3, 930, '900 20px sans-serif', cMagenta);
-    drawText('🥥 Coconut Water', (width / 4) * 3, 975, 'bold 24px sans-serif', cDarkGreen);
-    drawText('💻 VS Code', (width / 4) * 3, 1025, 'bold 24px sans-serif', cDarkGreen);
-    drawText('🎧 Lo-Fi Beats', (width / 4) * 3, 1075, 'bold 24px sans-serif', cDarkGreen);
-
-    // 9. Footer Ribbon
-    ctx.fillStyle = cMagenta;
-    ctx.fillRect(0, 1100, width, 60);
+    // Outer Rings
     ctx.beginPath();
-    ctx.moveTo(0, 1100); ctx.lineTo(width, 1100);
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = cOutline;
-    ctx.stroke();
-    drawText('#FRAMEINGOA', width / 2, 1140, '900 28px sans-serif', '#FFFFFF');
-
-    // 10. Circular Profile Photo
-    const imgCenterY = 470;
-    const imgRadius = 190; 
-    
-    // Outer Yellow Ring
-    ctx.beginPath();
-    ctx.arc(width / 2, imgCenterY, 210, 0, Math.PI * 2);
+    ctx.arc(540, imgCenterY, 260, 0, Math.PI * 2);
     ctx.fillStyle = cYellow;
     ctx.fill();
     ctx.lineWidth = 6;
-    ctx.strokeStyle = cOutline;
+    ctx.strokeStyle = cDarkGreen;
     ctx.stroke();
 
-    // Inner Dashed Red Ring
     ctx.beginPath();
-    ctx.arc(width / 2, imgCenterY, 195, 0, Math.PI * 2);
-    ctx.setLineDash([15, 15]);
+    ctx.arc(540, imgCenterY, 248, 0, Math.PI * 2);
+    ctx.setLineDash([15, 10]);
     ctx.lineWidth = 6;
-    ctx.strokeStyle = cMagenta;
+    ctx.strokeStyle = cPink;
     ctx.stroke();
     ctx.setLineDash([]);
 
@@ -194,43 +202,128 @@ export default function BadgeBuilder() {
       const img = new window.Image();
       img.crossOrigin = "anonymous";
       img.src = image;
-      
       await new Promise<void>((resolve) => {
         img.onload = () => {
           ctx.save();
           ctx.beginPath();
-          ctx.arc(width / 2, imgCenterY, imgRadius, 0, Math.PI * 2);
+          ctx.arc(540, imgCenterY, imgRadius, 0, Math.PI * 2);
           ctx.clip(); 
-
           const imgSize = imgRadius * 2;
           const scale = Math.max(imgSize / img.width, imgSize / img.height);
           const scaledW = img.width * scale;
           const scaledH = img.height * scale;
-          const dx = (width / 2) - (scaledW / 2);
+          const dx = 540 - (scaledW / 2);
           const dy = imgCenterY - (scaledH / 2);
-
           ctx.drawImage(img, dx, dy, scaledW, scaledH);
           ctx.restore();
-
+          
           ctx.beginPath();
-          ctx.arc(width / 2, imgCenterY, imgRadius, 0, Math.PI * 2);
-          ctx.lineWidth = 8;
-          ctx.strokeStyle = cOutline;
+          ctx.arc(540, imgCenterY, imgRadius, 0, Math.PI * 2);
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = cDarkGreen;
           ctx.stroke();
-
           resolve();
         };
       });
     } else {
       ctx.beginPath();
-      ctx.arc(width / 2, imgCenterY, imgRadius, 0, Math.PI * 2);
+      ctx.arc(540, imgCenterY, imgRadius, 0, Math.PI * 2);
       ctx.fillStyle = cCream;
       ctx.fill();
-      ctx.lineWidth = 8;
-      ctx.strokeStyle = cOutline;
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = cDarkGreen;
       ctx.stroke();
-      drawText('📷', width / 2, imgCenterY + 15, '80px sans-serif', '#000');
+      drawText('📷', 540, imgCenterY + 20, '100px sans-serif', '#000');
     }
+
+    // --- NAME & TITLE BOXES ---
+    // Name Box
+    drawPill(200, 840, 680, 80, cDarkGreen, cYellow, 4, 15);
+    drawText(`✦   ${name.toUpperCase()}   ✦`, 540, 895, '900 42px sans-serif', '#FFF');
+
+    // Title Box
+    drawPill(250, 930, 580, 70, cYellow, cDarkGreen, 4, 10);
+    drawText(`⚡      ${title.toUpperCase()}      ⚡`, 540, 978, '900 32px sans-serif', cPink);
+
+    // Divider Line
+    ctx.beginPath();
+    ctx.setLineDash([8, 8]);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = cDarkGreen;
+    ctx.moveTo(100, 1030); ctx.lineTo(980, 1030);
+    ctx.stroke();
+    ctx.setLineDash([]); 
+
+    // --- BOTTOM GRID (3 Columns) ---
+    // Col 1: Builder Class + QR
+    drawText('✦ BUILDER CLASS ✦', 260, 1070, '900 18px sans-serif', cDarkGreen);
+    
+    // Process tech stack text (split into two lines if too long)
+    const words = stack.toUpperCase().split(' ');
+    if (words.length > 2) {
+      drawText(words.slice(0, 2).join(' '), 260, 1110, '900 24px sans-serif', cPink);
+      drawText(words.slice(2).join(' '), 260, 1140, '900 24px sans-serif', cPink);
+    } else {
+      drawText(stack.toUpperCase(), 260, 1120, '900 28px sans-serif', cPink);
+    }
+
+    // Simulated QR Code
+    ctx.fillStyle = '#FFF';
+    ctx.fillRect(180, 1170, 160, 160);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = cDarkGreen;
+    ctx.strokeRect(180, 1170, 160, 160);
+    // QR Anchors
+    ctx.fillStyle = '#000';
+    ctx.fillRect(190, 1180, 40, 40); ctx.fillStyle = '#FFF'; ctx.fillRect(200, 1190, 20, 20);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(290, 1180, 40, 40); ctx.fillStyle = '#FFF'; ctx.fillRect(300, 1190, 20, 20);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(190, 1280, 40, 40); ctx.fillStyle = '#FFF'; ctx.fillRect(200, 1290, 20, 20);
+    drawText('🌴', 260, 1265, '35px sans-serif', '#000'); // Center flair
+
+    // Col 2: Beach Bag
+    drawText('✦ BEACH BAG ✦', 540, 1070, '900 18px sans-serif', cDarkGreen);
+    drawText('🥥', 470, 1130, '36px sans-serif', '#000');
+    drawText('COCONUT', 570, 1120, 'bold 20px sans-serif', cDarkGreen, 'left');
+    drawText('💻', 470, 1190, '36px sans-serif', '#000');
+    drawText('VS CODE', 570, 1180, 'bold 20px sans-serif', cDarkGreen, 'left');
+    drawText('🎧', 470, 1250, '36px sans-serif', '#000');
+    drawText('LO-FI BEATS', 570, 1240, 'bold 20px sans-serif', cDarkGreen, 'left');
+
+    // Col 3: Currently Shipping + Barcode
+    drawText('✦ CURRENTLY SHIPPING ✦', 820, 1070, '900 18px sans-serif', cDarkGreen);
+    
+    const shipWords = shipping.toUpperCase().split(' ');
+    if (shipWords.length > 2) {
+      drawText(shipWords.slice(0, 2).join(' '), 820, 1110, '900 24px sans-serif', cPink);
+      drawText(shipWords.slice(2).join(' '), 820, 1140, '900 24px sans-serif', cPink);
+    } else {
+      drawText(shipping.toUpperCase(), 820, 1120, '900 28px sans-serif', cPink);
+    }
+
+    // Squiggly line
+    ctx.beginPath();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = cDarkGreen;
+    for (let i = 0; i < 200; i++) {
+      ctx.lineTo(720 + i, 1170 + Math.sin(i * 0.1) * 5);
+    }
+    ctx.stroke();
+
+    const builderId = `HH-GOA-${Math.floor(Math.random() * 9000) + 1000}`;
+    drawText('BUILDER ID', 820, 1200, 'bold 16px sans-serif', cDarkGreen);
+    drawText(`#${builderId}`, 820, 1225, 'bold 20px sans-serif', cDarkGreen);
+    
+    // Simulated Barcode
+    ctx.fillStyle = '#000';
+    for (let i = 0; i < 45; i++) {
+      let bw = Math.random() > 0.5 ? 2 : 5;
+      ctx.fillRect(720 + (i * 4.5), 1250, bw, 60);
+    }
+
+    // Footer decoration
+    drawText('🌴 🌅 🌴', 540, 1340, '50px sans-serif', '#000');
 
     // 11. Trigger Download Instantly
     const dataUrl = canvas.toDataURL('image/png');
@@ -241,10 +334,7 @@ export default function BadgeBuilder() {
 
     // 12. Upload to Vercel Blob & Trigger Twitter Share
     canvas.toBlob(async (blob) => {
-      if (!blob) {
-        setIsGenerating(false);
-        return;
-      }
+      if (!blob) { setIsGenerating(false); return; }
       
       const formData = new FormData();
       formData.append('file', blob, `badge.png`);
@@ -261,8 +351,7 @@ export default function BadgeBuilder() {
           const baseUrl = window.location.origin;
           const sharePageUrl = `${baseUrl}/share?img=${encodeURIComponent(data.url)}`;
           
-          // --- THE NEW X (TWITTER) CAPTION ---
-          const tweetText = encodeURIComponent("Ticket punched for Hacker House Goa 2026! 🌴 Ready to scale up my Cloud & Gen AI prototypes and build something massive on the Konkan coast. \n\nWho else is going? Drop your tech stack below! 👇⚡️\n\n#FrameInGoa #HHGoa2026");
+          const tweetText = encodeURIComponent(`Ticket punched for Hacker House Goa 2026! 🌴\n\nShipping: ${shipping}\nStack: ${stack}\n\nWho else is building from paradise? 👇⚡️\n\n#FrameInGoa #HHGoa2026`);
           const twitterIntentUrl = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(sharePageUrl)}`;
           
           window.open(twitterIntentUrl, '_blank');
@@ -276,47 +365,71 @@ export default function BadgeBuilder() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FDFBF7] text-[#0F4C3A] p-8 font-sans">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center min-h-[80vh]">
+    <main className="min-h-screen bg-[#F9F6E8] text-[#063A24] p-8 font-sans">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start min-h-[80vh]">
         
         {/* LEFT COLUMN: Input Form */}
-        <div className="space-y-8 bg-white p-8 rounded-2xl border-4 border-[#0F4C3A] shadow-[8px_8px_0px_#E11D48]">
+        <div className="space-y-6 bg-white p-8 rounded-3xl border-4 border-[#063A24] shadow-[10px_10px_0px_#E83262] sticky top-8">
           <div>
-            <h1 className="text-3xl font-black text-[#0F4C3A] mb-2 flex items-center gap-3 uppercase tracking-tight">
-              <Ticket className="text-[#E11D48]" size={32} />
-              Official Check-In
+            <h1 className="text-4xl font-black text-[#063A24] mb-2 uppercase tracking-tighter">
+              Hacker House <span className="text-[#E83262]">Goa</span>
             </h1>
-            <p className="text-sm font-bold text-[#0F4C3A]/60 uppercase tracking-widest">Hacker House Goa 2026</p>
+            <p className="text-sm font-bold text-[#E87A24] uppercase tracking-widest">Builder Boarding Pass</p>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-[#E11D48] mb-1 uppercase tracking-wider">Builder Name</label>
-              <input 
-                type="text" 
-                value={name}
-                maxLength={20}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-[#FDFBF7] border-2 border-[#0F4C3A] rounded-lg p-3 text-[#0F4C3A] font-bold focus:outline-none focus:border-[#E11D48] transition-colors"
-              />
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-[#063A24] mb-2 uppercase tracking-wider">Builder Name</label>
+                <input 
+                  type="text" 
+                  value={name}
+                  maxLength={18}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-[#F9F6E8] border-2 border-[#063A24] rounded-xl p-3 text-[#063A24] font-bold focus:outline-none focus:border-[#E83262] transition-colors shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#063A24] mb-2 uppercase tracking-wider">Builder Role</label>
+                <input 
+                  type="text" 
+                  value={title}
+                  maxLength={15}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full bg-[#F9F6E8] border-2 border-[#063A24] rounded-xl p-3 text-[#063A24] font-bold focus:outline-none focus:border-[#E83262] transition-colors shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-[#063A24] mb-2 uppercase tracking-wider">Builder Class</label>
+                <input 
+                  type="text" 
+                  value={stack}
+                  maxLength={20}
+                  onChange={(e) => setStack(e.target.value)}
+                  className="w-full bg-[#F9F6E8] border-2 border-[#063A24] rounded-xl p-3 text-[#063A24] font-bold focus:outline-none focus:border-[#E83262] transition-colors shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#063A24] mb-2 uppercase tracking-wider">Currently Shipping</label>
+                <input 
+                  type="text" 
+                  value={shipping}
+                  maxLength={22}
+                  onChange={(e) => setShipping(e.target.value)}
+                  className="w-full bg-[#F9F6E8] border-2 border-[#063A24] rounded-xl p-3 text-[#063A24] font-bold focus:outline-none focus:border-[#E83262] transition-colors shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#E11D48] mb-1 uppercase tracking-wider">Tech Stack (Short)</label>
-              <input 
-                type="text" 
-                value={stack}
-                maxLength={20}
-                onChange={(e) => setStack(e.target.value)}
-                className="w-full bg-[#FDFBF7] border-2 border-[#0F4C3A] rounded-lg p-3 text-[#0F4C3A] font-bold focus:outline-none focus:border-[#E11D48] transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#E11D48] mb-1 uppercase tracking-wider">Upload Portrait</label>
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#0F4C3A] hover:border-[#E11D48] hover:bg-[#E11D48]/5 rounded-lg cursor-pointer transition-all">
-                <Upload className="text-[#0F4C3A] mb-2" />
-                <span className="text-sm font-bold text-[#0F4C3A]">Click to upload</span>
+              <label className="block text-xs font-bold text-[#063A24] mb-2 uppercase tracking-wider">Profile Photo</label>
+              <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-[#063A24] hover:border-[#E83262] hover:bg-[#E83262]/5 rounded-xl cursor-pointer transition-all bg-[#F9F6E8]">
+                <Upload className="text-[#E83262] mb-2" size={28} />
+                <span className="text-sm font-bold text-[#063A24]">Upload your best photo</span>
+                <span className="text-xs text-[#063A24]/60 mt-1">JPG, PNG, or HEIC</span>
                 <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
               </label>
             </div>
@@ -325,77 +438,66 @@ export default function BadgeBuilder() {
           <button 
             onClick={generateBadge}
             disabled={isGenerating}
-            className={`w-full ${isGenerating ? 'bg-[#BE123C] opacity-70 cursor-wait' : 'bg-[#E11D48] hover:bg-[#BE123C]'} text-white font-black py-4 rounded-lg uppercase tracking-widest transition-all active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_#0F4C3A] border-2 border-[#0F4C3A]`}
+            className={`w-full ${isGenerating ? 'bg-[#C11244] opacity-70 cursor-wait' : 'bg-[#E83262] hover:bg-[#C11244]'} text-white font-black text-lg py-5 rounded-xl uppercase tracking-widest transition-all active:translate-y-1 active:shadow-none shadow-[6px_6px_0px_#063A24] border-2 border-[#063A24] flex items-center justify-center gap-3`}
           >
-            {isGenerating ? 'Processing...' : 'Generate Pass & Share'}
+            {isGenerating ? 'Punching Ticket...' : 'Generate & Share on X'}
           </button>
         </div>
 
-        {/* RIGHT COLUMN: The Visual Output */}
-        <div className="flex flex-col items-center justify-center">
-          <div className="w-[420px] bg-[#FDFBF7] border-[4px] border-[#0F4C3A] rounded-[2rem] pt-6 px-6 pb-16 relative overflow-hidden shadow-[12px_12px_0px_rgba(15,76,58,0.15)] flex flex-col items-center">
+        {/* RIGHT COLUMN: The Visual Output (Scaled down preview) */}
+        <div className="flex flex-col items-center justify-center w-full">
+          <div className="relative w-full max-w-[480px] aspect-[4/5] bg-[#F9F6E8] border-[8px] border-[#063A24] rounded-lg overflow-hidden shadow-[16px_16px_0px_rgba(6,58,36,0.15)] pointer-events-none">
             
-            <div className="w-full flex flex-col items-center mb-6 relative">
-              <div className="absolute left-2 top-0 w-14 h-14 border-[3px] border-[#FACC15] bg-[#FDFBF7] rounded-full flex items-center justify-center text-[#0F4C3A] transform -rotate-12 shadow-[2px_2px_0px_#0F4C3A]">
-                <span className="text-xl">🌴</span>
-              </div>
-              
-              <h2 className="text-4xl font-black text-[#0F4C3A] tracking-tighter uppercase font-serif relative z-10 text-center mt-2">
-                HACKER HOUSE
-              </h2>
-              <div className="bg-[#E11D48] text-white text-[11px] font-black uppercase tracking-widest py-1.5 px-6 rounded-full mt-2 border-2 border-[#0A3222] shadow-[2px_2px_0px_#0F4C3A]">
-                HH GOA 2026
-              </div>
-            </div>
-            
-            <div className="relative mb-6 mt-2">
-              <div className="absolute inset-0 border-[4px] border-dashed border-[#E11D48] rounded-full scale-105 animate-[spin_40s_linear_infinite]"></div>
-              
-              <div className="w-48 h-48 bg-[#FDFBF7] rounded-full border-[6px] border-[#FACC15] overflow-hidden relative z-10 flex items-center justify-center shadow-[0_0_0_4px_#0F4C3A]">
-                {image ? (
-                  <img src={image} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="text-center">
-                    <span className="text-4xl block mb-1">📷</span>
-                    <span className="font-bold text-[#0F4C3A]/40 text-sm">NO PHOTO</span>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Real-time Preview mimicking the Canvas layout */}
+            <div className="absolute inset-0 p-4 flex flex-col items-center">
+               <div className="w-32 h-12 bg-[#E83262] border-2 border-[#F6C338] rounded-b-xl flex items-center justify-center mb-6 shadow-md">
+                 <span className="text-white font-black text-xs">HH GOA 2026</span>
+               </div>
+               
+               <h2 className="text-3xl font-black text-[#063A24] font-serif uppercase tracking-tight text-center leading-none">
+                 Hacker<br/>House
+               </h2>
+               <div className="absolute top-24 text-3xl font-black text-[#E83262] opacity-90 drop-shadow-md">गोवा</div>
 
-            <div className="w-[110%] flex flex-col items-center gap-3 mb-6">
-              <div className="bg-[#0F4C3A] text-white w-full text-center py-2.5 border-y-4 border-[#FACC15] shadow-[0_4px_0px_#0A3222]">
-                <h3 className="text-2xl font-black uppercase tracking-widest">{name}</h3>
-              </div>
-              <div className="bg-[#FACC15] text-[#0F4C3A] px-8 py-1.5 rounded-full border-2 border-[#0F4C3A] font-black text-sm uppercase flex gap-2 items-center shadow-[2px_2px_0px_#0F4C3A] z-10">
-                ✦ {title} ✦
-              </div>
-            </div>
+               <div className="mt-8 w-44 h-44 rounded-full border-4 border-[#F6C338] bg-[#F9F6E8] overflow-hidden relative shadow-lg">
+                 <div className="absolute inset-0 border-4 border-dashed border-[#E83262] rounded-full z-10 m-1"></div>
+                 {image ? (
+                   <img src={image} className="w-full h-full object-cover" alt="Preview" />
+                 ) : (
+                   <div className="w-full h-full flex flex-col items-center justify-center text-[#063A24]/30">
+                     <ImageIcon size={48} />
+                   </div>
+                 )}
+               </div>
 
-            <div className="w-full grid grid-cols-2 gap-4 border-t-[3px] border-dashed border-[#0F4C3A]/30 pt-4">
-              <div className="text-center border-r-[3px] border-dashed border-[#0F4C3A]/30 pr-4">
-                <div className="text-[10px] font-bold text-[#E11D48] uppercase tracking-widest mb-1">✦ BUILDER CLASS ✦</div>
-                <div className="font-black text-[#0F4C3A] text-sm uppercase leading-tight mb-3">{stack}</div>
-                
-                <div className="text-[10px] font-bold text-[#E11D48] uppercase tracking-widest mb-1">✦ CURRENT VIBE ✦</div>
-                <div className="font-black text-[#0F4C3A] text-xs uppercase">Build. Ship. Repeat.</div>
-              </div>
+               <div className="mt-8 w-11/12 bg-[#063A24] border-2 border-[#F6C338] rounded-full py-2 text-center shadow-md">
+                 <span className="text-white font-black uppercase tracking-wider text-sm">✦ {name} ✦</span>
+               </div>
+               <div className="mt-2 w-3/4 bg-[#F6C338] border-2 border-[#063A24] rounded-full py-1.5 text-center shadow-md">
+                 <span className="text-[#E83262] font-black uppercase text-xs">⚡ {title} ⚡</span>
+               </div>
 
-              <div className="pl-2">
-                 <div className="text-[10px] font-bold text-[#E11D48] uppercase tracking-widest mb-2 text-center">✦ BEACH BAG ✦</div>
-                 <div className="space-y-2.5">
-                    <div className="flex items-center gap-3 text-xs font-bold text-[#0F4C3A]"><span className="text-lg leading-none">🥥</span> Coconut Water</div>
-                    <div className="flex items-center gap-3 text-xs font-bold text-[#0F4C3A]"><span className="text-lg leading-none">💻</span> VS Code</div>
-                    <div className="flex items-center gap-3 text-xs font-bold text-[#0F4C3A]"><span className="text-lg leading-none">🎧</span> Lo-Fi Beats</div>
+               {/* Grid Preview */}
+               <div className="mt-auto w-full grid grid-cols-3 gap-2 border-t-2 border-dashed border-[#063A24] pt-4">
+                 <div className="text-center border-r-2 border-dashed border-[#063A24]/30">
+                   <div className="text-[8px] font-bold text-[#E83262]">✦ CLASS ✦</div>
+                   <div className="text-[10px] font-black text-[#063A24] leading-tight">{stack}</div>
                  </div>
-              </div>
-            </div>
-
-            <div className="absolute bottom-0 left-0 w-full bg-[#E11D48] text-white text-center py-2.5 font-black text-sm tracking-widest border-t-[4px] border-[#0F4C3A]">
-              #FRAMEINGOA
+                 <div className="text-center border-r-2 border-dashed border-[#063A24]/30">
+                   <div className="text-[8px] font-bold text-[#E83262]">✦ BAG ✦</div>
+                   <div className="text-[10px] font-black text-[#063A24]">🥥 💻 🎧</div>
+                 </div>
+                 <div className="text-center">
+                   <div className="text-[8px] font-bold text-[#E83262]">✦ SHIPPING ✦</div>
+                   <div className="text-[10px] font-black text-[#063A24] leading-tight">{shipping}</div>
+                 </div>
+               </div>
             </div>
           </div>
-
+          
+          <p className="text-[#063A24]/60 font-bold text-sm mt-6 text-center">
+             High-resolution 4:5 image generated on download.
+          </p>
           <canvas ref={canvasRef} className="hidden"></canvas>
         </div>
 
