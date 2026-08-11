@@ -98,10 +98,10 @@ export default function BadgeBuilder() {
 
       // --- 1. GOAN TROPICAL BACKGROUND ELEMENTS ---
       
-      // Bottom Sunset
+      // Bottom Sunset (Shrunk and pushed to the very bottom)
       ctx.fillStyle = cOrange;
       ctx.beginPath();
-      ctx.arc(540, 1350, 200, Math.PI, 0);
+      ctx.arc(540, 1350, 120, Math.PI, 0);
       ctx.fill();
       
       // Ocean Waves over the sun
@@ -109,9 +109,8 @@ export default function BadgeBuilder() {
       ctx.lineWidth = 6;
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(420, 1280); ctx.lineTo(660, 1280);
-      ctx.moveTo(460, 1310); ctx.lineTo(620, 1310);
-      ctx.moveTo(490, 1340); ctx.lineTo(590, 1340);
+      ctx.moveTo(460, 1280); ctx.lineTo(620, 1280);
+      ctx.moveTo(490, 1310); ctx.lineTo(590, 1310);
       ctx.stroke();
 
       // Top Left Stamp
@@ -144,7 +143,7 @@ export default function BadgeBuilder() {
       ctx.setLineDash([]);
       drawText('🌴', 920, 115, '50px sans-serif', '#000');
 
-      // --- 2. MAIN HEADER (Updated to HH GOA 2026) ---
+      // --- 2. MAIN HEADER ---
       drawText('HH GOA', 540, 220, '900 110px serif', cDarkGreen);
       // Hindi Overlay Shadow Trick
       ctx.save();
@@ -154,7 +153,9 @@ export default function BadgeBuilder() {
       ctx.shadowOffsetY = 3;
       drawText('गोवा', 540, 230, '900 90px sans-serif', cPink);
       ctx.restore();
-      drawText('2026', 540, 290, '900 50px sans-serif', cDarkGreen);
+      
+      // FIXED: Pushed 2026 higher so it doesn't overlap the photo
+      drawText('2026', 540, 265, '900 45px sans-serif', cDarkGreen);
 
       // --- 3. SIDE GRAPHICS (Signs & Stickers) ---
       drawRotatedText('✦ 28 - 31 OCT 2026 ✦', 70, 550, 'bold 24px sans-serif', cPink, -90);
@@ -251,61 +252,48 @@ export default function BadgeBuilder() {
       ctx.stroke();
       ctx.setLineDash([]); 
 
-      // --- 6. BOTTOM DATA GRID ---
-      // Col 1: Builder Class + QR
-      drawText('✦ BUILDER CLASS ✦', 260, 1070, '900 18px sans-serif', cDarkGreen);
-      const words = stack.toUpperCase().split(' ');
-      if (words.length > 2) {
-        drawText(words.slice(0, 2).join(' '), 260, 1110, '900 24px sans-serif', cPink);
-        drawText(words.slice(2).join(' '), 260, 1140, '900 24px sans-serif', cPink);
+      // --- 6. NEW STRUCTURED BOTTOM DATA GRID ---
+      const boxY = 1050;
+      const boxH = 170;
+      const boxW = 260;
+      
+      // Box 1: Builder Class
+      const b1X = 110;
+      drawPill(b1X, boxY, boxW, boxH, '#FFF', cDarkGreen, 4, 20);
+      drawText('✦ BUILDER CLASS ✦', b1X + boxW/2, boxY + 35, '900 16px sans-serif', cDarkGreen);
+      const stackWords = stack.toUpperCase().split(' ');
+      if (stackWords.length > 2) {
+        drawText(stackWords.slice(0, 2).join(' '), b1X + boxW/2, boxY + 85, '900 24px sans-serif', cPink);
+        drawText(stackWords.slice(2).join(' '), b1X + boxW/2, boxY + 120, '900 24px sans-serif', cPink);
       } else {
-        drawText(stack.toUpperCase(), 260, 1120, '900 28px sans-serif', cPink);
+        drawText(stack.toUpperCase(), b1X + boxW/2, boxY + 105, '900 26px sans-serif', cPink);
       }
 
-      // QR Code Box
-      ctx.fillStyle = '#FFF';
-      ctx.fillRect(180, 1160, 140, 140);
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = cDarkGreen;
-      ctx.strokeRect(180, 1160, 140, 140);
-      ctx.fillStyle = '#000';
-      ctx.fillRect(190, 1170, 35, 35); ctx.fillStyle = '#FFF'; ctx.fillRect(200, 1180, 15, 15);
-      ctx.fillStyle = '#000';
-      ctx.fillRect(275, 1170, 35, 35); ctx.fillStyle = '#FFF'; ctx.fillRect(285, 1180, 15, 15);
-      ctx.fillStyle = '#000';
-      ctx.fillRect(190, 1255, 35, 35); ctx.fillStyle = '#FFF'; ctx.fillRect(200, 1265, 15, 15);
-      drawText('🌴', 250, 1245, '30px sans-serif', '#000');
+      // Box 2: Beach Bag
+      const b2X = 410;
+      drawPill(b2X, boxY, boxW, boxH, '#FFF', cDarkGreen, 4, 20);
+      drawText('✦ BEACH BAG ✦', b2X + boxW/2, boxY + 35, '900 16px sans-serif', cDarkGreen);
+      drawText('🥥', b2X + 50, boxY + 75, '26px sans-serif', '#000');
+      drawText('COCONUT', b2X + 90, boxY + 68, 'bold 16px sans-serif', cDarkGreen, 'left');
+      drawText('💻', b2X + 50, boxY + 115, '26px sans-serif', '#000');
+      drawText('VS CODE', b2X + 90, boxY + 108, 'bold 16px sans-serif', cDarkGreen, 'left');
+      drawText('🎧', b2X + 50, boxY + 155, '26px sans-serif', '#000');
+      drawText('LO-FI BEATS', b2X + 90, boxY + 148, 'bold 16px sans-serif', cDarkGreen, 'left');
 
-      // Col 2: Beach Bag
-      drawText('✦ BEACH BAG ✦', 540, 1070, '900 18px sans-serif', cDarkGreen);
-      drawText('🥥', 470, 1120, '36px sans-serif', '#000');
-      drawText('COCONUT', 570, 1110, 'bold 20px sans-serif', cDarkGreen, 'left');
-      drawText('💻', 470, 1170, '36px sans-serif', '#000');
-      drawText('VS CODE', 570, 1160, 'bold 20px sans-serif', cDarkGreen, 'left');
-      drawText('🎧', 470, 1220, '36px sans-serif', '#000');
-      drawText('LO-FI BEATS', 570, 1210, 'bold 20px sans-serif', cDarkGreen, 'left');
-
-      // Col 3: Shipping + Frame In Goa
-      drawText('✦ CURRENTLY SHIPPING ✦', 820, 1070, '900 18px sans-serif', cDarkGreen);
+      // Box 3: Shipping & FrameInGoa
+      const b3X = 710;
+      drawPill(b3X, boxY, boxW, boxH, '#FFF', cDarkGreen, 4, 20);
+      drawText('✦ SHIPPING ✦', b3X + boxW/2, boxY + 35, '900 16px sans-serif', cDarkGreen);
       const shipWords = shipping.toUpperCase().split(' ');
       if (shipWords.length > 2) {
-        drawText(shipWords.slice(0, 2).join(' '), 820, 1110, '900 24px sans-serif', cPink);
-        drawText(shipWords.slice(2).join(' '), 820, 1140, '900 24px sans-serif', cPink);
+        drawText(shipWords.slice(0, 2).join(' '), b3X + boxW/2, boxY + 80, '900 22px sans-serif', cPink);
+        drawText(shipWords.slice(2).join(' '), b3X + boxW/2, boxY + 110, '900 22px sans-serif', cPink);
       } else {
-        drawText(shipping.toUpperCase(), 820, 1120, '900 28px sans-serif', cPink);
+        drawText(shipping.toUpperCase(), b3X + boxW/2, boxY + 95, '900 24px sans-serif', cPink);
       }
-
-      // 💥 #FRAMEINGOA TAG 
-      drawText('#FRAMEINGOA', 820, 1200, '900 32px sans-serif', cDarkGreen);
+      drawText('#FRAMEINGOA', b3X + boxW/2, boxY + 150, '900 20px sans-serif', cDarkGreen);
       
-      // Barcode
-      ctx.fillStyle = '#000';
-      for (let i = 0; i < 35; i++) {
-        let bw = Math.random() > 0.5 ? 2 : 5;
-        ctx.fillRect(730 + (i * 5), 1230, bw, 60);
-      }
-      
-      // Extra Goan flairs near the sun
+      // Extra Goan flairs near the bottom
       drawText('🌴', 350, 1310, '60px sans-serif', '#000');
       drawText('🌴', 730, 1310, '60px sans-serif', '#000');
       drawText('🐦', 280, 220, '30px sans-serif', '#000');
@@ -313,7 +301,7 @@ export default function BadgeBuilder() {
 
     };
 
-    drawBadge(); // THIS IS THE FIXED LINE!
+    drawBadge();
 
     // Cleanup to prevent memory leaks if you type really fast
     return () => { isCancelled = true; };
@@ -371,7 +359,6 @@ export default function BadgeBuilder() {
         {/* LEFT COLUMN: Input Form */}
         <div className="space-y-6 bg-white p-8 rounded-3xl border-4 border-[#063A24] shadow-[10px_10px_0px_#E83262] sticky top-8">
           <div>
-            {/* UPDATED UI HEADER TITLE */}
             <h1 className="text-4xl font-black text-[#063A24] mb-2 uppercase tracking-tighter">
               HH <span className="text-[#E83262]">GOA 2026</span>
             </h1>
@@ -393,7 +380,6 @@ export default function BadgeBuilder() {
                 />
               </div>
               <div>
-                {/* DEFAULT ROLE UPDATED TO LEADER */}
                 <label className="block text-xs font-bold text-[#063A24] mb-2 uppercase tracking-wider">Builder Role</label>
                 <input 
                   type="text" 
@@ -450,7 +436,6 @@ export default function BadgeBuilder() {
 
         {/* RIGHT COLUMN: Real-Time Canvas Render */}
         <div className="flex flex-col items-center justify-center w-full">
-          {/* We now show the ACTUAL canvas, scaling it with CSS so you see all the real graphics! */}
           <div className="relative w-full max-w-[500px] border-[8px] border-[#063A24] rounded-2xl overflow-hidden shadow-[16px_16px_0px_rgba(6,58,36,0.15)] bg-white">
             <canvas 
               ref={canvasRef} 
