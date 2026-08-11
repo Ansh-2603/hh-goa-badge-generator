@@ -154,7 +154,7 @@ export default function BadgeBuilder() {
       drawText('गोवा', 540, 230, '900 90px sans-serif', cPink);
       ctx.restore();
       
-      // Pushed 2026 higher so it doesn't overlap the photo
+      // FIXED: Pushed 2026 higher so it doesn't overlap the photo
       drawText('2026', 540, 265, '900 45px sans-serif', cDarkGreen);
 
       // --- 3. SIDE GRAPHICS (Signs & Stickers) ---
@@ -252,7 +252,7 @@ export default function BadgeBuilder() {
       ctx.stroke();
       ctx.setLineDash([]); 
 
-      // --- 6. STRUCTURED BOTTOM DATA GRID ---
+      // --- 6. NEW STRUCTURED BOTTOM DATA GRID ---
       const boxY = 1050;
       const boxH = 170;
       const boxW = 260;
@@ -321,13 +321,35 @@ export default function BadgeBuilder() {
     link.href = dataUrl;
     link.click();
 
-    // 2. Open Twitter with the pre-filled caption (No URL attached to text)
-    const tweetText = encodeURIComponent(`Ticket punched for Hacker House Goa 2026! 🌴\n\nShipping: ${shipping}\nStack: ${stack}\n\nWho else is building from paradise? 👇⚡️\n\n#FrameInGoa #HHGoa2026`);
-    const twitterIntentUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
-    
-    window.open(twitterIntentUrl, '_blank');
-    
-    setIsGenerating(false);
+    // 2. Upload to Vercel Blob & Trigger Twitter Share
+    canvas.toBlob(async (blob) => {
+      if (!blob) { setIsGenerating(false); return; }
+      const formData = new FormData();
+      formData.append('file', blob, `badge.png`);
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        const data = await res.json();
+        
+        if (data.url) {
+          const baseUrl = window.location.origin;
+          const sharePageUrl = `${baseUrl}/share?img=${encodeURIComponent(data.url)}`;
+          
+          const tweetText = encodeURIComponent(`Ticket punched for Hacker House Goa 2026! 🌴\n\nShipping: ${shipping}\nStack: ${stack}\n\nWho else is building from paradise? 👇⚡️\n\n#FrameInGoa #HHGoa2026`);
+          const twitterIntentUrl = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(sharePageUrl)}`;
+          
+          window.open(twitterIntentUrl, '_blank');
+        }
+      } catch (error) {
+        console.error("Failed to upload for sharing:", error);
+      } finally {
+        setIsGenerating(false);
+      }
+    }, 'image/png');
   };
 
   return (
